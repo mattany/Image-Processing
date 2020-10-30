@@ -1,29 +1,47 @@
 import numpy as np
 import cv2
 import sys
+import os
 
 
 def floyd_steinberg(mat):
+    mat = mat.astype(np.float)
     for i, row in enumerate(mat):
         for j, col in enumerate(row):
             old_value = mat[i][j]
-            new_value = (mat[i][j] // 64) * 85
-            mat[i][j] = new_value
+            levels = (0, 85, 170, 255)
+            new_value = min(levels, key=lambda x: abs(old_value - x))
             error = old_value - new_value
+            mat[i][j] = new_value
             if j < len(row) - 1:
-                mat[i][j + 1] += (7 * error) / 16
+                new_value = mat[i][j + 1] + (7 * error) / 16
+                mat[i][j + 1] = clip(new_value)
             if i < len(mat) - 1 and j < len(row) - 1:
-                mat[i + 1][j + 1] += error / 16
+                new_value = mat[i + 1][j + 1] + error / 16
+                mat[i + 1][j + 1] = clip(new_value)
             if i < len(mat) - 1:
-                mat[i + 1][j] += (5 * error) / 16
+                new_value = mat[i + 1][j] + (5 * error) / 16
+                mat[i + 1][j] = new_value
             if i < len(mat) - 1 and j > 0:
-                mat[i + 1][j - 1] += (3 * error) / 16
+                new_value = mat[i + 1][j - 1] + (3 * error) / 16
+                mat[i + 1][j - 1] = clip(new_value)
+    mat = mat.astype(np.uint8)
     return mat
+
+
+def clip(new_value):
+    if new_value > 255:
+        new_value = 255
+    elif new_value < 0:
+        new_value = 0
+    return new_value
 
 
 if __name__ == "__main__":
     path_to_image = sys.argv[1]
     img = cv2.imread(path_to_image, cv2.IMREAD_GRAYSCALE)
+
     img = floyd_steinberg(img)
-    cv2.imwrite("error_diffused_image2.png", img)
-    cv2.waitKey(0)  # waits until a key is pressed
+    dirname = f"{os.path.split(path_to_image)[0]}"
+    filename = f"diffused_{os.path.split(path_to_image)[1].split('.')[0]}.png"
+    cv2.imwrite(os.path.join(dirname, filename), img)
