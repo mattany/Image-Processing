@@ -7,6 +7,6 @@ if __name__ == "__main__":
     img = cv2.imread(path_to_image, cv2.IMREAD_UNCHANGED)
     cv2.imshow("original_image", img)
     cv2.waitKey(0)  # waits until a key is pressed
-
+    # switch the red and blue coordinates
     img = np.array([[[v[2], v[1], v[0]] for v in r] for r in img])
     cv2.imwrite("reversed_colors.png", img)
