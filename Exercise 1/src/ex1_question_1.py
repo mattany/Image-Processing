@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-import sys
-import os
+# import sys
+# import os
 import math
 
 SATURATION = 1
@@ -11,7 +11,7 @@ HUE = 0
 
 
 def construct_spectrum():
-    hsi_mat = np.array([[[0, 1, 0.3] for i in range(720)] for i in range(100)])
+    hsi_mat = np.array([[[0, 0.5, 0.5] for _ in range(720)] for _ in range(100)])
     for row in hsi_mat:
         color = 7 / 4 * math.pi
         for pixel in row:
@@ -20,6 +20,13 @@ def construct_spectrum():
             color %= 2 * math.pi
     mat = convert_to_rgb(hsi_mat)
     cv2.imwrite("./spectrum2.jpg", mat)
+
+def clip(new_value):
+    if new_value > 255:
+        new_value = 255
+    elif new_value < 0:
+        new_value = 0
+    return new_value
 
 
 def convert_to_rgb(mat):
@@ -41,6 +48,8 @@ def convert_to_rgb(mat):
                 b = i * (1 + ((s * math.cos(h)) / (math.cos((math.pi / 3) - h))))
                 r = 3 * i - (g + b)
             pixel[0], pixel[1], pixel[2] = 255 * r, 255 * g, 255 * b
+    clip_v = np.vectorize(clip)
+    # mat = clip_v(mat)
     mat = mat.astype(np.uint8)
     return mat
 
